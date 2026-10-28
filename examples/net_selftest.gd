@@ -50,13 +50,7 @@ func _ask(net: DotNetManager, peer: int, id: String) -> void:
 	net.messages.dispatch(m)
 
 
-func _run() -> void:
-	print("dot-trail: net")
-	var registry := DotTrailRegistry.new()
-	registry.config.equip_cooldown = 0.0
-	for spec: Array in [["spark", "public", []], ["gold", "groups", ["donator"]]]:
-		var d: DotTrailDef = DotTrailDef.from_dict({"id": spec[0], "image": spec[0] + ".png", "access": spec[1], "groups": spec[2]}).value
-		var _a := registry.add(d, _png())
+func _test_relay(registry: DotTrailRegistry) -> void:
 	var equip := DotTrailEquip.new(registry)
 	var server := _net(true)
 	add_child(server)
@@ -107,6 +101,8 @@ func _run() -> void:
 	bad.id = "x".repeat(33)
 	_check(not bad.validate().ok, "an over-long id is refused")
 
+
+func _test_cooldown(registry: DotTrailRegistry) -> void:
 	var cooled := DotTrailRegistry.new()
 	cooled.config.equip_cooldown = 1.0
 	var _c := cooled.add(registry.get_def("spark"), _png())
@@ -122,6 +118,8 @@ func _run() -> void:
 	_ask(server2, 5, "")
 	_check(slow.worn(5) == "spark", "the equip cooldown applies through the relay")
 
+
+func _test_client(registry: DotTrailRegistry) -> void:
 	var client := _net(false)
 	add_child(client)
 	var tc := DotTrailClient.new()
@@ -160,6 +158,8 @@ func _run() -> void:
 	_check(DotTrailClient.pack_from_rules({"sv_trail_pack": "trails-x@1.0.0"}) == PackedStringArray(["trails-x", "1.0.0"]), "the pack is read from the server's rule")
 	_check(DotTrailClient.pack_from_rules({"sv_trail_pack": "junk"}).is_empty() and DotTrailClient.pack_from_rules({}).is_empty(), "a missing or malformed rule is no pack")
 
+
+func _test_prejoin() -> void:
 	var pre := DotGamePrejoin.new()
 	var calls := []
 	pre.rules_fn = func(_a: String) -> Dictionary: return {"sv_trail_pack": "trails-x@1.0.0"}
@@ -168,6 +168,19 @@ func _run() -> void:
 		return DotResult.fail(DotError.CODE_NETWORK, "cdn down"))
 	var joined: DotResult = await pre.prepare(self, "127.0.0.1:27015")
 	_check(calls.size() == 1 and calls[0].has("sv_trail_pack") and joined.ok, "prejoin fetches the trail pack and a failure never blocks the join")
+
+
+func _run() -> void:
+	print("dot-trail: net")
+	var registry := DotTrailRegistry.new()
+	registry.config.equip_cooldown = 0.0
+	for spec: Array in [["spark", "public", []], ["gold", "groups", ["donator"]]]:
+		var d: DotTrailDef = DotTrailDef.from_dict({"id": spec[0], "image": spec[0] + ".png", "access": spec[1], "groups": spec[2]}).value
+		var _a := registry.add(d, _png())
+	_test_relay(registry)
+	_test_cooldown(registry)
+	await _test_client(registry)
+	await _test_prejoin()
 
 	print("%d passed, %d failed" % [_passed, _failed])
 	for f in _failures:
