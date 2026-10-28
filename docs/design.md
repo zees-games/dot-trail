@@ -60,8 +60,8 @@ The TMC backend owns prices, purchases and entitlements. This addon only reads.
 
 ![A runner with two trails, rendered by tools/screenshot.sh](trail-shot.png)
 
-The store directory is the pack source (`DotTrailStore`), the workbench routes write it (`DotWorkbenchTrails`), `DotTrailPack.build` or `publish_pack.sh` turns it into one pack, the server advertises `sv_trail_pack`, and dot-game's prejoin hook fetches it before the join. The equipped id travels in `DotGameTrailMessage`, checked by `DotGameTrailRelay` through `DotTrailEquip`.
+The store directory is the pack source (`DotTrailStore`), the workbench routes write it (`DotTrailWorkbench`), `DotTrailPack.build` or `publish_pack.sh` turns it into one pack, the server advertises `sv_trail_pack`, and dot-game's `DotGamePrejoin.extra_steps` fetches it before the join. The equipped id travels in `DotTrailMessage`, checked by `DotTrailRelay` through `DotTrailEquip`.
 
 ## Not built here
 
-The website-city endpoints above, store preview and credits, wiring `DotGameTrailClient` into a specific game (the game supplies `node_for` and the groups/entitlements callables), and exposing `sv_trail_pack` as a cvar. Each is a follow-up on the nightly board.
+The website-city endpoints above, store preview and credits, wiring `DotTrailClient` into a specific game (the game supplies `node_for` and the groups/entitlements callables), and exposing `sv_trail_pack` as a cvar. Each is a follow-up on the nightly board.

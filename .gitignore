@@ -17,3 +17,8 @@ Thumbs.db
 # Linked addons
 /addons/dot_core
 /addons/dot_cloud
+/addons/dot_workbench
+/addons/dot_profile
+/addons/dot_game
+/addons/dot_net
+/addons/dot_server
