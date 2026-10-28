@@ -20,6 +20,10 @@ const ACCESS_GROUPS := "groups"
 ## Store points; 0 is free.
 @export var price: int = 0
 @export var credit: String = ""
+## Rights record the upload form requires; the pack builder writes them into the pack's licence.json.
+@export var licence: String = ""
+@export var author: String = ""
+@export var url: String = ""
 
 
 static func valid_id(s: String) -> bool:
@@ -68,6 +72,9 @@ static func from_dict(d: Dictionary, limits: Dictionary = {}) -> DotResult:
 	if t.price < 0:
 		return DotResult.fail(DotError.CODE_INVALID, "trail price must not be negative", t.id)
 	t.credit = str(d.get("credit", "")).substr(0, 200)
+	t.licence = str(d.get("licence", "")).substr(0, 32)
+	t.author = str(d.get("author", "")).substr(0, 100)
+	t.url = str(d.get("url", "")).substr(0, 300)
 	return DotResult.success(t)
 
 
@@ -76,6 +83,7 @@ func to_dict() -> Dictionary:
 		"id": id, "title": title, "image": image, "width": width, "lifetime": lifetime,
 		"color": "#" + color.to_html(false), "blend": blend, "access": access,
 		"groups": Array(groups), "price": price, "credit": credit,
+		"licence": licence, "author": author, "url": url,
 	}
 
 

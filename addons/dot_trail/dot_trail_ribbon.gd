@@ -4,8 +4,8 @@ extends RefCounted
 ## Ribbon geometry as a pure function of points and ages, so the emitter, a test and a store preview agree.
 
 
-## Returns {vertices, uvs, alphas}: two vertices per point as a triangle strip. Oldest point first.
-static func strip(points: PackedVector3Array, ages: PackedFloat32Array, width: float, lifetime: float) -> Dictionary:
+## Returns {vertices, uvs, alphas}: two vertices per point as a triangle strip. Oldest point first. A finite [param eye] turns the ribbon to face it; a flat ribbon is a hairline from a chase camera.
+static func strip(points: PackedVector3Array, ages: PackedFloat32Array, width: float, lifetime: float, eye := Vector3.INF) -> Dictionary:
 	var verts := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var alphas := PackedFloat32Array()
@@ -14,7 +14,7 @@ static func strip(points: PackedVector3Array, ages: PackedFloat32Array, width: f
 		return {"vertices": verts, "uvs": uvs, "alphas": alphas}
 	for i in n:
 		var dir := (points[mini(i + 1, n - 1)] - points[maxi(i - 1, 0)])
-		var side := dir.cross(Vector3.UP)
+		var side := dir.cross(Vector3.UP if eye == Vector3.INF else eye - points[i])
 		if side.length_squared() < 0.000001:
 			side = dir.cross(Vector3.RIGHT)
 		side = side.normalized() * (width * 0.5)

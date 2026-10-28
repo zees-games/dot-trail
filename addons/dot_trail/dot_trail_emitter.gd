@@ -7,6 +7,8 @@ const CHANNEL := "trail"
 
 ## The node to follow, resolved against this emitter. Default: the parent.
 @export var target: DotNodeRef
+## Height above the node's origin (the feet) the ribbon is drawn at.
+@export var lift := 0.9
 var config: DotTrailConfig = DotTrailConfig.new()
 var def: DotTrailDef
 var registry: DotTrailRegistry
@@ -82,7 +84,7 @@ func sample(pos: Vector3, delta: float) -> void:
 			_points.remove_at(0)
 			_times.remove_at(0)
 		_dirty = true
-	if _dirty:
+	if _dirty or (_mesh != null and _points.size() > 1):
 		_rebuild()
 
 
@@ -96,7 +98,11 @@ func _rebuild() -> void:
 	var ages := PackedFloat32Array()
 	for t in _times:
 		ages.append(_clock - t)
-	var s := DotTrailRibbon.strip(_points, ages, minf(def.width, config.max_width), def.lifetime)
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	var lifted := PackedVector3Array()
+	for p in _points:
+		lifted.append(p + Vector3.UP * lift)
+	var s := DotTrailRibbon.strip(lifted, ages, minf(def.width, config.max_width), def.lifetime, cam.global_position if cam != null else Vector3.INF)
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	for i in s["vertices"].size():
 		var a: float = s["alphas"][i]

@@ -6,8 +6,8 @@ extends Node
 ## godot --headless --path . res://examples/trail_selftest.tscn
 ## [/codeblock]
 
-const SECTIONS := 7
-const CHECKS := 76
+const SECTIONS := 8
+const CHECKS := 94
 
 var _passed := 0
 var _failed := 0
@@ -24,6 +24,7 @@ func _ready() -> void:
 	_test_ribbon()
 	await _test_emitter()
 	_test_config()
+	_test_store()
 	_line("")
 	_line("%d sections, %d passed, %d failed" % [_section_count, _passed, _failed])
 	if _section_count != SECTIONS or _passed + _failed != CHECKS:
@@ -180,6 +181,8 @@ func _test_ribbon() -> void:
 	var up := DotTrailRibbon.strip(PackedVector3Array([Vector3.ZERO, Vector3.UP]), PackedFloat32Array([0, 0]), 1.0, 1.0)
 	_check(up["vertices"].size() == 4 and is_finite(up["vertices"][0].x), "a vertical path does not divide by zero")
 	_check(DotTrailRibbon.strip(PackedVector3Array([Vector3.ZERO]), PackedFloat32Array([0]), 1.0, 1.0)["vertices"].is_empty(), "one point draws nothing")
+	var f := DotTrailRibbon.strip(pts, ages, 0.4, 1.0, Vector3(1, 0, 5))
+	_check(absf(f["vertices"][0].y - f["vertices"][1].y) > 0.3 and absf(f["vertices"][0].z) < 0.001, "an eye beside a flat path stands the ribbon up to face it")
 
 
 func _test_emitter() -> void:
@@ -238,6 +241,54 @@ func _test_config() -> void:
 	var cli := DotTrailConfig.new()
 	_check(cli.cli_prefix() == "--trail-" and cli.env_prefix() == "DOT_TRAIL_", "prefixes")
 	_check(cli.limits()["max_dimension"] == 512, "limits feed the upload check")
+
+
+func _test_store() -> void:
+	_section("store and pack")
+	var dir := OS.get_temp_dir().path_join("dot_trail_selftest_%d" % Time.get_ticks_usec())
+	var store := DotTrailStore.new(null, dir)
+	var meta := {"id": "flame", "title": "Flame", "licence": "CC0-1.0", "author": "Test", "url": "https://example.com/a", "access": "groups", "groups": ["donator"]}
+	var made := store.submit(meta, _png(16, 16), "x.png")
+	_check(made.ok and store.registry.get_def("flame").credit == "Test (CC0-1.0)", "a complete upload is accepted and credited")
+	var bad := meta.duplicate()
+	bad["licence"] = "CC-BY-NC-4.0"
+	_code(store.submit(bad, _png(16, 16)), "invalid", "a non-commercial licence is refused")
+	bad = meta.duplicate()
+	bad["url"] = ""
+	_code(store.submit(bad, _png(16, 16)), "invalid", "no source url refused")
+	_code(store.submit(meta, "#!/bin/sh\n".to_utf8_buffer()), "invalid", "a script renamed png is refused")
+	_check(store.registry.count() == 1 and store.registry.get_def("flame").title == "Flame", "a refused upload leaves the set unchanged")
+	var again := meta.duplicate()
+	again["title"] = "Flame 2"
+	_check(store.submit(again, _png(32, 32)).ok and store.registry.get_def("flame").title == "Flame 2", "re-uploading an id replaces it")
+	var big := meta.duplicate()
+	big["id"] = "wide"
+	big["width"] = 99
+	_code(store.submit(big, _png(16, 16)), "invalid", "a ribbon wider than the cap is refused")
+	_code(store.submit({"id": "Bad Id", "licence": "CC0-1.0", "author": "a", "url": "https://x.y"}, _png(8, 8)), "invalid", "a bad id is refused")
+	_check(store.save().ok and FileAccess.file_exists(dir.path_join("trails.json")) and FileAccess.file_exists(dir.path_join("licence.json")), "save writes the index, the images and licence.json")
+	var licences: Array = JSON.parse_string(store.licence_json())
+	_check(licences.size() == 2 and licences[1]["paths"] == ["flame.png"] and licences[1]["author"] == "Test", "licence.json covers every image")
+	var back := DotTrailStore.new(null, dir)
+	_check(back.load_dir().ok and back.registry.get_def("flame").groups == PackedStringArray(["donator"]), "a store reloads with its access setting")
+	_check(DotTrailStore.new(null, dir.path_join("none")).load_dir().ok, "a missing directory is an empty store")
+	_check(DotTrailPack.content_id_for("My Server!") == "trails-my-server-", "content id is a safe slug")
+	var out := dir.path_join("out")
+	if ResourceLoader.exists(DotTrailPack.PUBLISHER_SCRIPT):
+		var built := DotTrailPack.build(store, "trails-test", out, {"version": "1.0.0"})
+		_check(built.ok and FileAccess.file_exists(out.path_join("manifest.json")), "the store builds ONE dot-cloud pack with a manifest")
+		var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(out.path_join("manifest.json"))) if built.ok else {}
+		var paths: Array = (manifest.get("files", []) as Array).map(func(f: Dictionary) -> String: return f["path"])
+		_check(paths.has("trails.json") and paths.has("flame.png"), "the pack lists the index and the image")
+		var mounted := DotTrailRegistry.new()
+		var staged := DotTrailStore.new(mounted).load_dir(out.path_join("_source"))
+		_check(staged.ok and mounted.count() == 1, "the delivered files load back into a registry")
+	else:
+		_check(true, "dot-cloud not linked: build skipped")
+		_check(true, "dot-cloud not linked: manifest check skipped")
+		_check(true, "dot-cloud not linked: load skipped")
+	_check(DotTrailStore.new().save().code() == "invalid", "a store without a directory cannot save")
+
 
 
 # --- helpers ---------------------------------------------------------------
