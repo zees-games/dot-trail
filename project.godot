@@ -1,0 +1,20 @@
+; Engine configuration file.
+
+config_version=5
+
+[application]
+
+config/name="dot-trail"
+config/description="Equippable player trails."
+config/version="0.1.0"
+run/main_scene="res://examples/trail_selftest.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/dot_trail/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
