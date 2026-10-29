@@ -6,6 +6,8 @@ extends RefCounted
 const CHANNEL := "trail"
 ## The server rule advertising its trail pack as "<content id>@<version>".
 const PACK_CVAR := "sv_trail_pack"
+## dot-server's DotConVar.FLAG_NOTIFY (notify cvars are the query rules), copied so this file parses without dot-server; net_selftest checks the two agree.
+const NOTIFY_FLAG := 1 << 3
 const EMITTER_SCRIPT := "res://addons/dot_trail/dot_trail_emitter.gd"
 const EMITTER_META := &"dot_trail_emitter"
 
@@ -48,10 +50,30 @@ func refresh() -> void:
 
 ## "<id>@<version>" from the server's rules, or an empty array.
 static func pack_from_rules(rules: Dictionary) -> PackedStringArray:
-	var parts := String(rules.get(PACK_CVAR, "")).strip_edges().split("@")
-	if parts.size() != 2 or parts[0].is_empty() or parts[1].is_empty():
-		return PackedStringArray()
-	return parts
+	return DotTrailConfig.parse_pack(String(rules.get(PACK_CVAR, "")))
+
+
+## The rule value for a published pack: what [method advertise] puts in [constant PACK_CVAR].
+static func pack_rule(content_id: String, version: String) -> String:
+	return "%s@%s" % [content_id, version]
+
+
+## The server half: registers [constant PACK_CVAR] on a dot-server console registry (duck-typed, `cvar(name, value, description, flags)`) as a notify cvar, so the query rules carry it to a joining client. Success holds the DotConVar; set its value again after publishing a new pack version. An empty [member DotTrailConfig.pack] registers nothing and succeeds with null.
+static func advertise(console: Object, config: DotTrailConfig) -> DotResult:
+	if config == null:
+		return DotResult.fail(DotError.CODE_INVALID, "trail advertise: no config")
+	var valid := config.validate()
+	if not valid.ok:
+		return valid
+	var value := config.pack.strip_edges()
+	if value.is_empty():
+		return DotResult.success(null)
+	if console == null or not console.has_method(&"cvar"):
+		return DotResult.fail(DotError.CODE_UNSUPPORTED, "trail advertise: no console to register %s on" % PACK_CVAR)
+	var cv: Object = console.call(&"cvar", PACK_CVAR, value, "The trail pack a client downloads before it joins, <content id>@<version>.", NOTIFY_FLAG)
+	if cv == null:
+		return DotResult.fail(DotError.CODE_STATE, "trail advertise: %s was not registered" % PACK_CVAR)
+	return DotResult.success(cv)
 
 
 ## The pre-join step: ensures the server's one trail pack through a DotCloudClient (duck-typed) and loads it into [member registry]. Success holds the trail count; a failure means join without trails.

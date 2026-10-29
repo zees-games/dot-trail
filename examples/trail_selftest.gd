@@ -3,7 +3,7 @@ extends Node
 ## Exercises dot-trail headless: defs, upload validation, registry and index, equip rules, ribbon maths, the emitter and config.
 
 const SECTIONS := 8
-const CHECKS := 94
+const CHECKS := 98
 
 var _passed := 0
 var _failed := 0
@@ -237,6 +237,13 @@ func _test_config() -> void:
 	var cli := DotTrailConfig.new()
 	_check(cli.cli_prefix() == "--trail-" and cli.env_prefix() == "DOT_TRAIL_", "prefixes")
 	_check(cli.limits()["max_dimension"] == 512, "limits feed the upload check")
+	_check(DotTrailConfig.parse_pack("trails-x@1.0.0") == PackedStringArray(["trails-x", "1.0.0"]) and DotTrailConfig.parse_pack("owner/name@2") == PackedStringArray(["owner/name", "2"]), "pack parses <id>@<version> and <owner>/<name>@<version>")
+	var bad := ["junk", "a@b@c", "../x@1", "a/b/c@1", "@1", "x@"].filter(func(t: String) -> bool: return not DotTrailConfig.parse_pack(t).is_empty())
+	_check(bad.is_empty(), "malformed packs parse to nothing")
+	var p := DotTrailConfig.new()
+	_check(p.apply_dictionary({"pack": "trails-x@1.0.0"}).size() == 1 and p.pack_parts()[1] == "1.0.0", "pack is a layered cvar")
+	p.pack = "junk"
+	_code(p.validate(), "invalid", "a malformed pack refused")
 
 
 func _test_store() -> void:
