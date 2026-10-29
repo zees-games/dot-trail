@@ -4,5 +4,6 @@ extends RefCounted
 
 # 1: DotTrailDef, DotTrailRegistry, DotTrailEquip, DotTrailUpload, DotTrailRibbon, DotTrailEmitter, DotTrailConfig.
 # 2: DotTrailWorkbench, DotTrailMessage, DotTrailRelay, DotTrailClient (moved here from dot-workbench and dot-game).
-const LEVEL := 2
+# 3: DotTrailEnvelope, DotTrailBackend (Stub, Http), the store UI (DotTrailScreen, DotTrailUploadPanel, DotTrailPreview, DotTrailFilePick, DotTrailKit, DotTrailMenu), relay receive/allows, client receive/apply_missing.
+const LEVEL := 3
 const OLDEST := 1

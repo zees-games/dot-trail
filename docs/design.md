@@ -49,12 +49,15 @@ All defs and images of a server ship as a single dot-cloud pack (`trails/<hash>`
 
 The TMC backend owns prices, purchases and entitlements. This addon only reads.
 
-1. `GET /api/trails/catalog` returns `[{id, title, price_points, credits_price (null for now), free, preview_url, pack_hash}]`. `free` is true when `price_points == 0`.
+1. `GET /api/trails/catalog` (player token optional) returns `{trails: [{id, title, price_points, credits_price (null for now), free, preview_url, owned}], points: <balance or null>}`. `free` is true when `price_points == 0`.
 2. `GET /api/trails/entitlements?user=<scope id>` (server-to-server, API key) returns `{ids: [..], groups: [..]}`; the game server passes both to `DotTrailEquip`.
-3. `POST /api/store/purchase {sku: "trail:<id>", currency: "points"}` debits points and adds the id to the entitlements; idempotent per purchase id. Credits are the same call with `currency: "credits"` later.
+3. `POST /api/store/purchase {sku: "trail:<id>", currency: "points", purchase_id}` (player token) debits points and adds the id to the entitlements, answering `{ids, points}`; idempotent per `purchase_id`. Credits are the same call with `currency: "credits"` later.
+7. `POST /api/trails/uploads {title, licence, author, url, file_name, image_base64}` (player token) queues an image for moderation and answers `{id}`. The site re-runs the same checks as `DotTrailUpload.validate` (PNG or WebP by magic bytes, 256 KB, 512 px, nothing after the image).
+
+Every path is a field on `DotTrailBackendHttp`, so a deployment follows the site's routes without a code change.
 4. Operators publish trails from dot-workbench; website-city stores the metadata row (id, owner server, access, price, licence, author) and the image on the CDN. A trail priced above 0 is only listed when the owner passes the store review.
 5. Preview: the store page loads the trail image from `preview_url` and renders the ribbon with the same maths (`DotTrailRibbon.strip(points, ages, width, lifetime)` is deterministic and has no node dependency, so a web preview is a small JS port or the web build running `DotTrailEmitter` on a scripted path).
-6. The server never trusts a client's claim of ownership; only item 2 counts, cached for `trail_entitlement_ttl` seconds.
+6. The server never trusts a client's claim of ownership; only item 2 counts. A request the cached list would refuse first refetches it (`DotTrailEnvelope.serve`'s `refresh_fn`), so a trail bought a moment ago can be worn at once.
 
 ## Phase 2 (built)
 
@@ -62,6 +65,16 @@ The TMC backend owns prices, purchases and entitlements. This addon only reads.
 
 The store directory is the pack source (`DotTrailStore`), the workbench routes write it (`DotTrailWorkbench`), `DotTrailPack.build` or `publish_pack.sh` turns it into one pack, the server advertises `sv_trail_pack`, and dot-game's `DotGamePrejoin.extra_steps` fetches it before the join. The equipped id travels in `DotTrailMessage`, checked by `DotTrailRelay` through `DotTrailEquip`.
 
+## Phase 3 (built): the store in the game
+
+![The Trails page in the game menu, stub store](trail-store.png)
+
+`DotTrailMenu.add_to(menu, setup)` puts a Trails page into dot-menu: a grid of every trail with a live ribbon preview (`DotTrailPreview`, the same strip maths flattened to the screen), its price, and Buy, Equip or Take off; members-only trails show their group. Below it the upload form (`DotTrailUploadPanel`) picks an image (`DotTrailFilePick`: a FileDialog on desktop, the browser's file input through `DotWeb` on the web), validates it with `DotTrailUpload.validate`, previews it and submits it for review. The store is a `DotTrailBackend`: `DotTrailBackendHttp` for the site (HTTPRequest through `DotHttp`, so it runs in a browser), `DotTrailBackendStub` for tests and offline play (it saves to `user://` and calls `DotWeb.sync_filesystem()`).
+
+Wear requests travel on a dot-server envelope kind, `dot.trail` (`DotTrailEnvelope`), so a game needs no netcode change: the server registers it with `serve(server, relay, refresh_fn)`, a client with `attach(link, client)` before the link connects. dot-server-deploy installs both halves (`TmcTrail` on the host, `TmcTrailLink` in the shell), and dot-game's `DotGameClientAvatars.figure_of` (API 34) tells the client where each player's figure is.
+
+`tools/screenshot_ui.sh <prefix>` renders the page and the upload form; `examples/ui_selftest.tscn` checks the transport, the stub store, the screen, and good and bad uploads.
+
 ## Not built here
 
-The website-city endpoints above, store preview and credits, wiring `DotTrailClient` into a specific game (the game supplies `node_for` and the groups/entitlements callables), and exposing `sv_trail_pack` as a cvar. Each is a follow-up on the nightly board.
+Credits as a currency, and a browser file picker shared in dot-core rather than this addon's own. Each is a follow-up on the nightly board.
