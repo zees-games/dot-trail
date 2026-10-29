@@ -45,19 +45,18 @@ All defs and images of a server ship as a single dot-cloud pack (`trails/<hash>`
 
 `DotTrailEmitter` (Node3D) resolves a `DotNodeRef` to the player node and samples its global position each physics tick. A point is added once the target moved `trail_min_step`; points older than `lifetime` are dropped; the count is capped (`trail_max_points`). The ribbon is an `ImmediateMesh` rebuilt per frame only when it changed, and not at all when `DisplayServer` is headless (the point list is still kept, so tests and servers see the same data). Distance culling and a global on/off cvar (`trail_enabled`) are for low-end clients.
 
-## Store integration contract (spec for website-city, not implemented here)
+## Store integration contract (built, website-city branch `task/dot-trail-store`)
 
-The TMC backend owns prices, purchases and entitlements. This addon only reads.
+The TMC backend owns prices, purchases and entitlements. `DotTrailBackendHttp` follows these routes; every path and the player query parameter is a field, set from `trail.yml` keys `trail_{catalog,equipped,purchase,uploads,server_catalog,entitlements}_path` and `trail_player_param` through `apply_config`.
 
-1. `GET /api/trails/catalog` (player token optional) returns `{trails: [{id, title, price_points, credits_price (null for now), free, preview_url, owned}], points: <balance or null>}`. `free` is true when `price_points == 0`.
-2. `GET /api/trails/entitlements?user=<scope id>` (server-to-server, API key) returns `{ids: [..], groups: [..]}`; the game server passes both to `DotTrailEquip`.
-3. `POST /api/store/purchase {sku: "trail:<id>", currency: "points", purchase_id}` (player token) debits points and adds the id to the entitlements, answering `{ids, points}`; idempotent per `purchase_id`. Credits are the same call with `currency: "credits"` later.
-7. `POST /api/trails/uploads {title, licence, author, url, file_name, image_base64}` (player token) queues an image for moderation and answers `{id}`. The site re-runs the same checks as `DotTrailUpload.validate` (PNG or WebP by magic bytes, 256 KB, 512 px, nothing after the image).
+1. Player token (the client's app session): `GET /api/app/v1/trails` lists `{trails: [{id, title, price | price_points, owned, image_url | preview_url, sku}], points | balance, equipped}`; `PUT /api/app/v1/trails {id, game?}` sets what is worn (`""` takes it off; `game` makes it per-game, absent is site-wide); `POST /api/app/v1/trails/purchase {id, sku, purchase_id}` debits points and answers the owned ids and the new balance (`ids | owned | trails`, `points | balance`).
+2. Server key (the game server's integration token, never logged): `GET /api/integration/v1/trails/catalog` returns DotTrailDef dicts with `image_url`, `sha256`, `sku`; `GET /api/integration/v1/trails/entitlements?player=<key>` returns the trails the player may use (`trails`, strings or `{id}`) and `equipped`. The game server passes the ids to `DotTrailEquip`.
+3. Refusals reach the UI through `DotTrailBackend.explain`: `insufficient_points` and "Need N more Points", `not_entitled`, `pending_moderation`, `already_owned`, `unauthorized`.
+4. `uploads_path` (`POST`, player token) queues an image for moderation; the site re-runs the checks of `DotTrailUpload.validate` (PNG or WebP by magic bytes, 256 KB, 512 px, nothing after the image). The route is still ours to confirm with the site.
 
-Every path is a field on `DotTrailBackendHttp`, so a deployment follows the site's routes without a code change.
-4. Operators publish trails from dot-workbench; website-city stores the metadata row (id, owner server, access, price, licence, author) and the image on the CDN. A trail priced above 0 is only listed when the owner passes the store review.
-5. Preview: the store page loads the trail image from `preview_url` and renders the ribbon with the same maths (`DotTrailRibbon.strip(points, ages, width, lifetime)` is deterministic and has no node dependency, so a web preview is a small JS port or the web build running `DotTrailEmitter` on a scripted path).
-6. The server never trusts a client's claim of ownership; only item 2 counts. A request the cached list would refuse first refetches it (`DotTrailEnvelope.serve`'s `refresh_fn`), so a trail bought a moment ago can be worn at once.
+5. Operators publish trails from dot-workbench; website-city stores the metadata row (id, owner server, access, price, licence, author) and the image on the CDN. A trail priced above 0 is only listed when the owner passes the store review.
+6. Preview: the store page loads the trail image from `preview_url` and renders the ribbon with the same maths (`DotTrailRibbon.strip(points, ages, width, lifetime)` is deterministic and has no node dependency, so a web preview is a small JS port or the web build running `DotTrailEmitter` on a scripted path).
+7. The server never trusts a client's claim of ownership; only item 2 counts. A request the cached list would refuse first refetches it (`DotTrailEnvelope.serve`'s `refresh_fn`), so a trail bought a moment ago can be worn at once.
 
 ## Phase 2 (built)
 
@@ -77,4 +76,4 @@ Wear requests travel on a dot-server envelope kind, `dot.trail` (`DotTrailEnvelo
 
 ## Not built here
 
-Credits as a currency, and a browser file picker shared in dot-core rather than this addon's own. Each is a follow-up on the nightly board.
+Credits as a currency, and a browser file picker shared in dot-core rather than this addon's own (`DotTrailFilePick` is dialog plus browser input plus validation hooks, too large to move in a pin change). Each is a follow-up on the nightly board.

@@ -19,4 +19,11 @@ emitter.set_trail(trails.get_def(equip.worn(peer_id)))
 
 Settings are `DotTrailConfig` (`DOT_TRAIL_*` environment, `--trail-*` command line): `enabled`, `min_step`, `max_points`, `equip_cooldown`, `max_upload_bytes`, `max_dimension`, `max_trails`, `cull_distance`.
 
-The self-test is `examples/trail_selftest.tscn`, run headless.
+The self-tests are `examples/trail_selftest.tscn`, `ui_selftest.tscn` and `http_selftest.tscn` (the site routes against a mocked HTTP layer), run headless.
+
+## Credits
+
+- The addon ships no art. Every trail carries `credit` (author, licence and source URL, required by the upload form and shown in the store), so the artist is named wherever the trail is.
+- The store page, ribbon previews and the screenshots in `docs/` are drawn by the addon's own code from generated noise and flat colours; no third-party image is bundled.
+- Built on Godot Engine (MIT) and the dot-core, dot-game, dot-net, dot-menu, dot-ui and dot-cloud addons of this family.
+- The store talks to the TMC site's trail routes (`/api/app/v1/trails` for players, `/api/integration/v1/trails` for the game server).

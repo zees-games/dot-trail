@@ -9,6 +9,8 @@ const REASONS := {
 	"already_owned": "You already own this trail.",
 	"unknown_sku": "This trail is not for sale.",
 	"unauthorized": "Sign in to buy trails.",
+	"not_entitled": "You do not own this trail.",
+	"pending_moderation": "This upload is waiting for moderation.",
 }
 
 
@@ -27,8 +29,18 @@ func submit_upload(_meta: Dictionary, _bytes: PackedByteArray, _file_name: Strin
 	return DotResult.fail(DotError.CODE_UNSUPPORTED, "no trail store")
 
 
-## Server to server: what a player owns. Value: {ids, groups}.
-func entitlements(_user: String) -> DotResult:
+## Server to server: what a player may use. Value: {ids, groups, equipped}.
+func entitlements(_player: String) -> DotResult:
+	return DotResult.fail(DotError.CODE_UNSUPPORTED, "no trail store")
+
+
+## Server to server: every trail as DotTrailDef dicts plus image_url, sha256 and sku. Value: {trails}.
+func server_catalog() -> DotResult:
+	return DotResult.fail(DotError.CODE_UNSUPPORTED, "no trail store")
+
+
+## Records what the player wears, site-wide or for [param game] ("" is site-wide). Value: {equipped}.
+func set_equipped(_id: String, _game: String = "") -> DotResult:
 	return DotResult.fail(DotError.CODE_UNSUPPORTED, "no trail store")
 
 
@@ -41,4 +53,8 @@ static func explain(res: DotResult) -> String:
 	for code: String in REASONS:
 		if said.contains(code):
 			return REASONS[code]
+	var need := RegEx.create_from_string("Need (\\d+) more Points")
+	var m := need.search(said)
+	if m != null:
+		return "You need %s more points." % m.get_string(1)
 	return text

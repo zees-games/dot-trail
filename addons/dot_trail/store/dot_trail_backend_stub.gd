@@ -8,6 +8,7 @@ var points: int = 1000
 var prices: Dictionary = {}
 var owned: Dictionary = {}
 var uploads: Array[Dictionary] = []
+var equipped: String = ""
 var save_path: String = ""
 ## Seconds each call waits, to show a busy state in a shot.
 var delay_sec: float = 0.0
@@ -67,8 +68,15 @@ func submit_upload(meta: Dictionary, bytes: PackedByteArray, file_name: String) 
 	return DotResult.success({"id": row["id"], "status": "pending"})
 
 
-func entitlements(_user: String) -> DotResult:
-	return DotResult.success({"ids": PackedStringArray(owned.keys()), "groups": PackedStringArray()})
+func entitlements(_player: String) -> DotResult:
+	return DotResult.success({"ids": PackedStringArray(owned.keys()), "groups": PackedStringArray(), "equipped": equipped})
+
+
+func set_equipped(id: String, _game: String = "") -> DotResult:
+	if not id.is_empty() and not owned.has(id) and int(prices.get(id, {}).get("price_points", 1)) > 0:
+		return DotResult.fail(DotError.CODE_FORBIDDEN, "not_entitled")
+	equipped = id
+	return DotResult.success({"equipped": id})
 
 
 func save_state() -> void:
