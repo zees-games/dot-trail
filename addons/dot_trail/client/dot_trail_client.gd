@@ -65,6 +65,8 @@ func fetch_pack(cloud: Object, rules: Dictionary) -> DotResult:
 	var res: DotResult = await pack_script.call(&"fetch", cloud, pack[0], pack[1], registry)
 	if res.ok:
 		refresh()
+	else:
+		DotLog.warn(CHANNEL, "trail pack fetch failed, joining without trails", {"code": res.code()})
 	return res
 
 

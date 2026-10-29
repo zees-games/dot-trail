@@ -64,6 +64,7 @@ func save(to: String = "") -> DotResult:
 	for name: String in files:
 		var f := FileAccess.open(target.path_join(name), FileAccess.WRITE)
 		if f == null:
+			DotLog.error(CHANNEL, "trail store write failed", {"file": name, "dir": target})
 			return DotResult.fail(DotError.CODE_IO, "cannot write " + name, target)
 		f.store_buffer(files[name])
 		f.close()
