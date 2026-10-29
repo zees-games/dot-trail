@@ -1,10 +1,6 @@
 extends Node
 
 ## Exercises the trail form's server side ([DotTrailWorkbench]) and its HTTP routes. Needs dot-workbench linked into addons/.
-##
-## [codeblock]
-## godot --headless --path . res://examples/workbench_selftest.tscn
-## [/codeblock]
 
 const SECTIONS := 3
 const CHECKS := 26

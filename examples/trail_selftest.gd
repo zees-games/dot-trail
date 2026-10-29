@@ -1,10 +1,6 @@
 extends Node
 
 ## Exercises dot-trail headless: defs, upload validation, registry and index, equip rules, ribbon maths, the emitter and config.
-##
-## [codeblock]
-## godot --headless --path . res://examples/trail_selftest.tscn
-## [/codeblock]
 
 const SECTIONS := 8
 const CHECKS := 94
@@ -289,9 +285,6 @@ func _test_store() -> void:
 		_check(true, "dot-cloud not linked: load skipped")
 	_check(DotTrailStore.new().save().code() == "invalid", "a store without a directory cannot save")
 
-
-
-# --- helpers ---------------------------------------------------------------
 
 func _section(name: String) -> void:
 	_section_count += 1
