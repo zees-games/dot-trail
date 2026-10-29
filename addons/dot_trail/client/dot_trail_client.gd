@@ -20,6 +20,8 @@ var node_for: Callable = Callable()
 ## actor peer id -> trail id.
 var worn: Dictionary = {}
 
+## func(id: String) -> bool: replaces the net for [method request] (see DotTrailEnvelope).
+var send_fn: Callable = Callable()
 var _net: DotNetManager = null
 
 
@@ -35,6 +37,9 @@ func attach(net: DotNetManager, p_registry: Object) -> DotResult:
 
 ## Asks the server to wear [param id] ("" takes it off). The server decides; the answer arrives as [signal changed].
 func request(id: String) -> DotResult:
+	if send_fn.is_valid():
+		var sent: bool = send_fn.call(id)
+		return DotResult.success(id) if sent else DotResult.fail(DotError.CODE_STATE, "trail request not sent")
 	if _net == null:
 		return DotResult.fail(DotError.CODE_STATE, "trail client is not attached")
 	var m := DotTrailMessage.new()
@@ -46,6 +51,17 @@ func request(id: String) -> DotResult:
 func refresh() -> void:
 	for actor: int in worn:
 		_apply(actor)
+
+
+## Draws only the wearers whose figure has no ribbon yet: cheap enough to call every second while figures come and go.
+func apply_missing() -> int:
+	var drawn := 0
+	for actor: int in worn:
+		var figure: Node = node_for.call(actor) if node_for.is_valid() else null
+		if figure != null and is_instance_valid(figure) and not figure.has_meta(EMITTER_META):
+			_apply(actor)
+			drawn += 1
+	return drawn
 
 
 ## "<id>@<version>" from the server's rules, or an empty array.
@@ -92,16 +108,22 @@ func fetch_pack(cloud: Object, rules: Dictionary) -> DotResult:
 	return res
 
 
+## The server says [param actor] now wears [param id] ("" none).
+func receive(actor: int, id: String) -> void:
+	if actor <= 0 or not DotTrailMessage.valid_wire_id(id):
+		return
+	if id.is_empty():
+		worn.erase(actor)
+	else:
+		worn[actor] = id
+	_apply(actor)
+	changed.emit(actor, id)
+
+
 func _on_message(message: DotNetMessage) -> void:
 	var m := message as DotTrailMessage
-	if m == null or m.actor <= 0:
-		return
-	if m.id.is_empty():
-		worn.erase(m.actor)
-	else:
-		worn[m.actor] = m.id
-	_apply(m.actor)
-	changed.emit(m.actor, m.id)
+	if m != null:
+		receive(m.actor, m.id)
 
 
 func _apply(actor: int) -> void:

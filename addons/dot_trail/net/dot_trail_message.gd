@@ -26,13 +26,20 @@ func _read(r: DotNetReader) -> void:
 
 
 func _validate() -> DotResult:
-	if id.length() > MAX_ID:
-		return DotResult.fail(DotError.CODE_INVALID, "trail id out of range")
-	for i in id.length():
-		var c := id.unicode_at(i)
-		if not ((c >= 97 and c <= 122) or (c >= 48 and c <= 57) or c == 95):
-			return DotResult.fail(DotError.CODE_INVALID, "trail id has a character outside a-z, 0-9, _")
+	if not valid_wire_id(id):
+		return DotResult.fail(DotError.CODE_INVALID, "trail id out of range or has a character outside a-z, 0-9, _")
 	return DotResult.success(true)
+
+
+## An id as it may travel: empty (take it off) or up to [constant MAX_ID] of a-z, 0-9, _.
+static func valid_wire_id(p_id: String) -> bool:
+	if p_id.length() > MAX_ID:
+		return false
+	for i in p_id.length():
+		var c := p_id.unicode_at(i)
+		if not ((c >= 97 and c <= 122) or (c >= 48 and c <= 57) or c == 95):
+			return false
+	return true
 
 
 ## Registers the type on [param net]'s manager: call on both ends, before the schema is sealed. Idempotent.

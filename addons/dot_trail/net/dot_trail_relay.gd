@@ -13,6 +13,8 @@ var groups_fn: Callable = Callable()
 ## func(peer_id: int) -> PackedStringArray: trail ids the backend says the player bought.
 var entitlements_fn: Callable = Callable()
 
+## func(actor: int, id: String, to_peer: int) -> void: replaces the net, so a host can carry trails on another channel (see DotTrailEnvelope). to_peer 0 is everyone.
+var send_fn: Callable = Callable()
 var _net: DotNetManager = null
 var _peers: Dictionary = {}
 
@@ -33,6 +35,15 @@ static func serve(net: DotNetManager, p_equip: DotTrailEquip, p_groups_fn: Calla
 		roster.call(&"follow", relay)
 	net.set_meta(NET_META, relay)
 	return DotResult.success(relay)
+
+
+## A relay with no net: set [member send_fn] (DotTrailEnvelope does) and feed it [method receive].
+static func create(p_equip: DotTrailEquip, p_groups_fn: Callable = Callable(), p_entitlements_fn: Callable = Callable()) -> DotTrailRelay:
+	var relay := DotTrailRelay.new()
+	relay.equip = p_equip
+	relay.groups_fn = p_groups_fn
+	relay.entitlements_fn = p_entitlements_fn
+	return relay
 
 
 static func of(net: DotNetManager) -> DotTrailRelay:
@@ -64,17 +75,37 @@ func revalidate(peer_id: int) -> bool:
 	return dropped
 
 
+## The peers the relay knows, for a transport that broadcasts by sending to each.
+func peers() -> Array:
+	return _peers.keys()
+
+
+## Whether [param peer] may wear [param id] on what the relay knows now; a refusal may be a purchase not yet seen.
+func allows(peer: int, id: String) -> bool:
+	if id.is_empty():
+		return true
+	var reg: Variant = equip.get(&"registry")
+	return reg != null and (reg as DotTrailRegistry).may_equip(id, _groups(peer), _entitlements(peer)).ok
+
+
+## A client asked to wear [param id]; the answer goes out through the net or [member send_fn]. Returns the refusal, if any.
+func receive(peer: int, id: String) -> DotResult:
+	if peer <= 0 or not DotTrailMessage.valid_wire_id(id):
+		return DotResult.fail(DotError.CODE_INVALID, "bad trail request")
+	var res: DotResult = equip.call(&"equip", peer, id, _groups(peer), _entitlements(peer))
+	if res.ok:
+		_send(peer, id, 0)
+	else:
+		DotLog.debug(CHANNEL, "equip refused", {"peer": peer, "id": id, "code": res.code()})
+		_send(peer, String(equip.call(&"worn", peer)), peer)
+	return res
+
+
 func _on_message(message: DotNetMessage) -> void:
 	var request := message as DotTrailMessage
 	if request == null or request.sender_peer_id <= 0:
 		return
-	var peer := request.sender_peer_id
-	var res: DotResult = equip.call(&"equip", peer, request.id, _groups(peer), _entitlements(peer))
-	if res.ok:
-		_send(peer, request.id, 0)
-	else:
-		DotLog.debug(CHANNEL, "equip refused", {"peer": peer, "id": request.id, "code": res.code()})
-		_send(peer, String(equip.call(&"worn", peer)), peer)
+	var _res := receive(request.sender_peer_id, request.id)
 
 
 func _groups(peer_id: int) -> PackedStringArray:
@@ -86,6 +117,9 @@ func _entitlements(peer_id: int) -> PackedStringArray:
 
 
 func _send(actor: int, id: String, to_peer: int) -> void:
+	if send_fn.is_valid():
+		send_fn.call(actor, id, to_peer)
+		return
 	if _net == null:
 		return
 	var m := DotTrailMessage.new()
