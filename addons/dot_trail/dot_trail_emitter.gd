@@ -20,6 +20,8 @@ var _target: Node3D
 var _mesh_node: MeshInstance3D
 var _mesh: ImmediateMesh
 var _dirty := false
+## True while the mesh holds a surface; an empty or out-of-range ribbon then skips the clear instead of repeating it every tick.
+var _drawn := false
 
 
 func _ready() -> void:
@@ -92,9 +94,12 @@ func _rebuild() -> void:
 	_dirty = false
 	if _mesh == null:
 		return
-	_mesh.clear_surfaces()
 	if def == null or _points.size() < 2 or not _in_range():
+		if _drawn:
+			_mesh.clear_surfaces()
+			_drawn = false
 		return
+	_mesh.clear_surfaces()
 	var ages := PackedFloat32Array()
 	for t in _times:
 		ages.append(_clock - t)
@@ -110,6 +115,7 @@ func _rebuild() -> void:
 		_mesh.surface_set_uv(s["uvs"][i])
 		_mesh.surface_add_vertex(to_local(s["vertices"][i]))
 	_mesh.surface_end()
+	_drawn = true
 
 
 func _in_range() -> bool:
