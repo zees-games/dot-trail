@@ -3,7 +3,6 @@ extends RefCounted
 
 ## Carries trails over a dot-server envelope kind instead of a game's DotNetManager, so a server host adds trails to any game without touching its netcode. Duck-typed on DotServer and DotClientLink: this addon does not require dot-server.
 
-const CHANNEL := "trail"
 ## Up: {id}. Down: {actor, id}. Optional, so a peer without trails still plays.
 const KIND := &"dot.trail"
 ## DotEnvelope.Lane.EVENT, copied so this file parses without dot-server.
