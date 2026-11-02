@@ -94,6 +94,7 @@ func refresh() -> DotResult:
 	if not is_instance_valid(self):
 		return res
 	if not res.ok:
+		DotLog.warn(CHANNEL, "trail store unavailable", {"code": res.code()})
 		_say("The store is unavailable: %s" % DotTrailBackend.explain(res), true)
 		_rebuild_cards()
 		return res
@@ -119,6 +120,7 @@ func buy(id: String) -> DotResult:
 	if not is_instance_valid(self):
 		return res
 	if not res.ok:
+		DotLog.info(CHANNEL, "trail purchase refused", {"trail": id, "code": res.code()})
 		_say(DotTrailBackend.explain(res), true)
 		return res
 	for owned_id: Variant in res.value.get("ids", []):
