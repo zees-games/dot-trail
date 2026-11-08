@@ -142,7 +142,18 @@ func equip(id: String) -> DotResult:
 		return DotResult.fail(DotError.CODE_STATE, "not connected")
 	var res: DotResult = request_fn.call(id)
 	_say("Asking the server…" if res.ok else "Not connected to a server.", not res.ok)
+	if res.ok:
+		_persist_equipped(id)
 	return res
+
+
+## Tells the site what is worn so it survives the next session. A refusal is only logged: the server's word decides what is drawn.
+func _persist_equipped(id: String) -> void:
+	if backend == null:
+		return
+	var res: DotResult = await backend.set_equipped(id)
+	if not res.ok and res.code() != DotError.CODE_UNSUPPORTED:
+		DotLog.info(CHANNEL, "trail equip not saved to the site", {"trail": id, "code": res.code()})
 
 
 ## The server's word on what this player wears; call from DotTrailClient.changed.

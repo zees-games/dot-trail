@@ -3,7 +3,7 @@ extends Node
 ## The trails screen, its stub store, the upload form with random good and bad images, and the envelope transport, all headless. Needs dot-menu linked into addons/ for the kit (it falls back to plain controls without).
 
 const SECTIONS := 6
-const CHECKS := 61
+const CHECKS := 62
 
 var _passed := 0
 var _failed := 0
@@ -196,6 +196,7 @@ func _test_screen() -> void:
 	_check(screen.cards["vip"]["preview"].dim and not screen.cards["spark"]["preview"].dim, "locked previews are dimmed")
 	screen.cards["spark"]["action"].pressed.emit()
 	_check(asked == ["spark"], "Equip asks the server")
+	_check(b.equipped == "spark", "Equip also records the choice with the backend")
 	var bought: DotResult = await screen.buy("comet")
 	_check(bought.ok and screen.points == 700 and screen.owned.has("comet"), "Buy spends points and owns the trail")
 	_check(asked.back() == "comet", "a purchase equips the trail")
