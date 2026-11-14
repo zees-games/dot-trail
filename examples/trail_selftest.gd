@@ -3,7 +3,7 @@ extends Node
 ## Exercises dot-trail headless: defs, upload validation, registry and index, equip rules, ribbon maths, the emitter and config.
 
 const SECTIONS := 8
-const CHECKS := 98
+const CHECKS := 103
 
 var _passed := 0
 var _failed := 0
@@ -233,7 +233,19 @@ func _test_config() -> void:
 	var applied := c.apply_dictionary({"max_points": 10, "min_step": 0.3})
 	_check(applied.size() == 2 and c.max_points == 10, "dictionary layer applies")
 	c.max_points = 1
-	_code(c.validate(), "invalid", "max_points below 2 refused")
+	_code(c.validate(), "invalid", "max_points of 1 refused")
+	c.max_points = -1
+	_code(c.validate(), "invalid", "a negative max_points refused")
+	var unlimited := DotTrailConfig.new()
+	unlimited.apply_dictionary({"max_points": 0, "max_trails": 0, "max_upload_bytes": 0, "max_dimension": 0, "max_width": 0.0, "max_lifetime": 0.0})
+	_check(unlimited.validate().ok, "0 (unlimited) validates for every limit")
+	_check(DotTrailUpload.validate(_png(1024, 1024), "big.png", unlimited.limits()).ok, "an unlimited config takes a 1024 px image (default limit 512)")
+	_check(DotTrailDef.from_dict({"id": "wide", "image": "w.png", "width": 50.0, "lifetime": 120.0}, unlimited.limits()).ok, "and a 50 m, 120 s trail")
+	var many := DotTrailRegistry.new()
+	many.config = unlimited
+	for i in range(300):
+		many.add(_def("t%d" % i), _png(8, 8))
+	_check(many.count() == 300, "max_trails 0 takes 300 trails (%d)" % many.count())
 	var cli := DotTrailConfig.new()
 	_check(cli.cli_prefix() == "--trail-" and cli.env_prefix() == "DOT_TRAIL_", "prefixes")
 	_check(cli.limits()["max_dimension"] == 512, "limits feed the upload check")

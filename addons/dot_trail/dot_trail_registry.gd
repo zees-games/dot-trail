@@ -39,7 +39,7 @@ func get_def(id: String) -> DotTrailDef:
 func add(def: DotTrailDef, image_bytes: PackedByteArray) -> DotResult:
 	if _defs.has(def.id):
 		return DotResult.fail(DotError.CODE_CONFLICT, "trail id already exists", def.id)
-	if _defs.size() >= config.max_trails:
+	if config.max_trails > 0 and _defs.size() >= config.max_trails:
 		return DotResult.fail(DotError.CODE_QUOTA, "trail limit reached (%d)" % config.max_trails, def.id)
 	var ok := DotTrailUpload.validate(image_bytes, def.image, config.limits())
 	if not ok.ok:
@@ -77,7 +77,7 @@ func load_index(json_text: String, files: Dictionary) -> DotResult:
 	for entry: Variant in parsed["trails"]:
 		if not (entry is Dictionary):
 			return DotResult.fail(DotError.CODE_PARSE, "trail entry is not an object")
-		var made := DotTrailDef.from_dict(entry, {"max_width": config.max_width, "max_lifetime": config.max_lifetime})
+		var made := DotTrailDef.from_dict(entry, config.limits())
 		if not made.ok:
 			return made
 		var def: DotTrailDef = made.value

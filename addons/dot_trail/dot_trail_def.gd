@@ -51,7 +51,8 @@ static func from_dict(d: Dictionary, limits: Dictionary = {}) -> DotResult:
 	t.lifetime = float(d.get("lifetime", t.lifetime))
 	var max_w: float = float(limits.get("max_width", 2.0))
 	var max_l: float = float(limits.get("max_lifetime", 5.0))
-	if t.width <= 0.0 or t.width > max_w or t.lifetime <= 0.0 or t.lifetime > max_l:
+	# A limit of 0 is unlimited, as in DotTrailConfig.
+	if t.width <= 0.0 or (max_w > 0.0 and t.width > max_w) or t.lifetime <= 0.0 or (max_l > 0.0 and t.lifetime > max_l):
 		return DotResult.fail(DotError.CODE_INVALID, "trail width or lifetime out of range", t.id)
 	var col: Variant = d.get("color", "#ffffff")
 	if col is String or col is StringName:

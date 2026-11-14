@@ -33,7 +33,7 @@ func submit(meta: Dictionary, image_bytes: PackedByteArray, declared_name: Strin
 		return checked
 	var d := meta.duplicate()
 	d["image"] = id + "." + str(checked.value["type"])
-	var made := DotTrailDef.from_dict(d, {"max_width": registry.config.max_width, "max_lifetime": registry.config.max_lifetime})
+	var made := DotTrailDef.from_dict(d, registry.config.limits())
 	if not made.ok:
 		return made
 	var def: DotTrailDef = made.value

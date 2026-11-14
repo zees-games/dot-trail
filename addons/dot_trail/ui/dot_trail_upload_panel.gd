@@ -58,7 +58,10 @@ func _build() -> void:
 	choose_button = k.secondary("Choose image…")
 	choose_button.pressed.connect(picker.open)
 	left.add_child(choose_button)
-	info = k.label("PNG or WebP, up to %d KB and %d px." % [int(limits["max_bytes"]) / 1024, int(limits["max_dimension"])], true, "muted")
+	info = k.label("PNG or WebP, %s and %s." % [
+		("up to %d KB" % (int(limits["max_bytes"]) / 1024)) if int(limits["max_bytes"]) > 0 else "any size",
+		("up to %d px" % int(limits["max_dimension"])) if int(limits["max_dimension"]) > 0 else "any dimensions",
+	], true, "muted")
 	left.add_child(info)
 	var form := VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL

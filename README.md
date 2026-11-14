@@ -32,14 +32,16 @@ emitter.set_trail(trails.get_def(equip.worn(peer_id)))
 | --- | --- | --- |
 | `enabled` | true | Trails on or off. |
 | `min_step` | 0.15 | Distance moved before a new ribbon point. |
-| `max_points` | 64 | Points kept per ribbon, which sets its length. |
+| `max_points` | 64 | Points kept per ribbon, which sets its length. Any value; 0 is unlimited (lifetime alone bounds it). 1 is refused. |
 | `equip_cooldown` | 1.0 | Seconds between equip changes. |
-| `max_trails` | 256 | Trails the registry accepts. |
-| `max_upload_bytes` | 262144 | Largest uploaded image. |
-| `max_dimension` | 512 | Largest image side in pixels. |
-| `cull_distance` | 60 | Distance beyond which a ribbon is not drawn. |
+| `max_trails` | 256 | Trails the registry accepts. Any value; 0 is unlimited. |
+| `max_upload_bytes` | 262144 | Largest uploaded image. Any value; 0 is unlimited. |
+| `max_dimension` | 512 | Largest image side in pixels. Any value; 0 is unlimited. |
+| `max_width` | 2.0 | Widest ribbon a trail may ask for, in metres. Any value; 0 is unlimited. |
+| `max_lifetime` | 5.0 | Longest ribbon lifetime a trail may ask for, in seconds. Any value; 0 is unlimited. |
+| `cull_distance` | 60 | Distance beyond which a ribbon is not drawn. 0 is never culled. |
 
-These are limits you can change. Unlike most dot settings, 0 does not mean unlimited here: the registry refuses everything at `max_trails` 0.
+These are limits you can change, and like other dot settings 0 means unlimited. A negative value is refused when the config is validated, never clamped.
 
 ## Testing
 

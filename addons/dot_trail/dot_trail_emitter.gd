@@ -72,7 +72,9 @@ func _physics_process(delta: float) -> void:
 ## Advances time by [param delta] and records [param pos] when it moved far enough. INF only ages the ribbon. Public so a test or a server without physics can drive it.
 func sample(pos: Vector3, delta: float) -> void:
 	_clock += delta
-	var lifetime := minf(def.lifetime, config.max_lifetime) if def != null else 0.0
+	var lifetime := 0.0
+	if def != null:
+		lifetime = def.lifetime if config.max_lifetime <= 0.0 else minf(def.lifetime, config.max_lifetime)
 	while not _times.is_empty() and _clock - _times[0] > lifetime:
 		_points.remove_at(0)
 		_times.remove_at(0)
@@ -82,7 +84,7 @@ func sample(pos: Vector3, delta: float) -> void:
 	if _points.is_empty() or _points[_points.size() - 1].distance_to(pos) >= config.min_step:
 		_points.append(pos)
 		_times.append(_clock)
-		if _points.size() > config.max_points:
+		if config.max_points > 0 and _points.size() > config.max_points:
 			_points.remove_at(0)
 			_times.remove_at(0)
 		_dirty = true
@@ -107,7 +109,7 @@ func _rebuild() -> void:
 	var lifted := PackedVector3Array()
 	for p in _points:
 		lifted.append(p + Vector3.UP * lift)
-	var s := DotTrailRibbon.strip(lifted, ages, minf(def.width, config.max_width), def.lifetime, cam.global_position if cam != null else Vector3.INF)
+	var s := DotTrailRibbon.strip(lifted, ages, def.width if config.max_width <= 0.0 else minf(def.width, config.max_width), def.lifetime, cam.global_position if cam != null else Vector3.INF)
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	for i in s["vertices"].size():
 		var a: float = s["alphas"][i]

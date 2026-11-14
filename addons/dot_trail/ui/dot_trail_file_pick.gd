@@ -6,7 +6,7 @@ extends Node
 signal picked(file_name: String, bytes: PackedByteArray)
 signal failed(message: String)
 
-## Refused before reading; [DotTrailUpload.validate] then applies the real limit with a clearer sentence.
+## Refused before reading; [DotTrailUpload.validate] then applies the real limit with a clearer sentence. 0 is unlimited.
 var read_cap_bytes: int = 4 * 1024 * 1024
 var _dialog: FileDialog = null
 var _js_input: Variant = null
@@ -23,7 +23,7 @@ func open() -> void:
 
 ## Hands bytes in as if picked; for suites and the shot tool.
 func deliver(file_name: String, bytes: PackedByteArray) -> void:
-	if bytes.size() > read_cap_bytes:
+	if read_cap_bytes > 0 and bytes.size() > read_cap_bytes:
 		failed.emit("%s is too large to read (%d bytes)." % [file_name, bytes.size()])
 		return
 	picked.emit(file_name, bytes)
@@ -48,7 +48,7 @@ func _on_desktop_file(path: String) -> void:
 		failed.emit("Could not open %s." % path.get_file())
 		return
 	var size := f.get_length()
-	if size > read_cap_bytes:
+	if read_cap_bytes > 0 and size > read_cap_bytes:
 		failed.emit("%s is too large to read (%d bytes)." % [path.get_file(), size])
 		return
 	var bytes := f.get_buffer(size)
@@ -74,7 +74,7 @@ func _on_web_change(_args: Array) -> void:
 		return
 	var file: Variant = files.item(0)
 	_js_name = str(file.name)
-	if int(file.size) > read_cap_bytes:
+	if read_cap_bytes > 0 and int(file.size) > read_cap_bytes:
 		failed.emit("%s is too large to read (%d bytes)." % [_js_name, int(file.size)])
 		return
 	_js_reader = DotWeb.bridge().call("create_object", "FileReader")

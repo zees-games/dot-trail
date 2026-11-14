@@ -6,7 +6,7 @@ extends RefCounted
 const PNG_SIG := [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
 
-## Value on success: {type, width, height, bytes}. limits: max_bytes, max_dimension.
+## Value on success: {type, width, height, bytes}. limits: max_bytes, max_dimension (0 is unlimited).
 static func validate(bytes: PackedByteArray, file_name: String, limits: Dictionary = {}) -> DotResult:
 	var max_bytes: int = int(limits.get("max_bytes", 262144))
 	var max_dim: int = int(limits.get("max_dimension", 512))
@@ -15,13 +15,13 @@ static func validate(bytes: PackedByteArray, file_name: String, limits: Dictiona
 	var ext := file_name.get_extension().to_lower()
 	if ext != "png" and ext != "webp":
 		return DotResult.fail(DotError.CODE_INVALID, "only png and webp trails are accepted", file_name)
-	if bytes.size() > max_bytes:
+	if max_bytes > 0 and bytes.size() > max_bytes:
 		return DotResult.fail(DotError.CODE_QUOTA, "upload is %d bytes, the limit is %d" % [bytes.size(), max_bytes], file_name)
 	var dims: DotResult = _png(bytes) if ext == "png" else _webp(bytes)
 	if not dims.ok:
 		return dims
 	var wh: Vector2i = dims.value
-	if wh.x < 1 or wh.y < 1 or wh.x > max_dim or wh.y > max_dim:
+	if wh.x < 1 or wh.y < 1 or (max_dim > 0 and (wh.x > max_dim or wh.y > max_dim)):
 		return DotResult.fail(DotError.CODE_INVALID, "image is %dx%d, the limit is %d" % [wh.x, wh.y, max_dim], file_name)
 	return DotResult.success({"type": ext, "width": wh.x, "height": wh.y, "bytes": bytes.size()})
 

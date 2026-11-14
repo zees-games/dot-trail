@@ -72,7 +72,7 @@ func _upload(req: Dictionary) -> DotResult:
 	if not (meta is Dictionary) or not (b64 is String) or (b64 as String).is_empty():
 		return DotResult.fail(DotError.CODE_INVALID, "an upload needs meta (object) and image (base64)")
 	var limit := int(store.get("registry").get("config").get("max_upload_bytes"))
-	if (b64 as String).length() > limit * 4 / 3 + 16:
+	if limit > 0 and (b64 as String).length() > limit * 4 / 3 + 16:
 		return DotResult.fail(DotError.CODE_QUOTA, "image is larger than %d bytes" % limit)
 	var bytes := Marshalls.base64_to_raw(b64)
 	var made: DotResult = store.call("submit", meta, bytes, str(req.get("file", "")))
