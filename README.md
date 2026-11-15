@@ -5,7 +5,7 @@ Players equip a trail, an image ribbon that follows them as they move. Operators
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
-2. Either use [dot-bootstrap](https://github.com/modcommunity/dot-bootstrap), which clones every project and links the addons, or copy `addons/dot_trail/` and its dependencies into your project and enable dot-trail in *Project > Project Settings > Plugins*.
+2. Either use [dot-bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/dot_trail/` and its dependencies into your project and enable dot-trail in *Project > Project Settings > Plugins*.
 
 ## Use
 
