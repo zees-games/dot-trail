@@ -39,7 +39,7 @@ emitter.set_trail(trails.get_def(equip.worn(peer_id)))
 | `max_lifetime` | 5.0 | Longest ribbon lifetime a trail may ask for, in seconds. Any value; 0 is unlimited. |
 | `cull_distance` | 60 | Distance beyond which a ribbon is not drawn. 0 is never culled. |
 
-These are limits you can change, and like other dot settings 0 means unlimited. A negative value is refused when the config is validated, never clamped.
+These are limits you can change, and like other Gamespice settings 0 means unlimited. A negative value is refused when the config is validated, never clamped.
 
 ## Testing
 
