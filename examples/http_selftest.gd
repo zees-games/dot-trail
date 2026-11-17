@@ -89,10 +89,10 @@ func _test_player() -> void:
 	_check(rows[1].get("price_points") == 300 and not rows[1].get("free") and not rows[1].get("owned"), "price becomes price_points")
 	_check(m.calls[0]["headers"].get("Authorization") == "Bearer TOK", "the player token authorises the list")
 	m.routes["/api/app/v1/trails"] = {"status": 200, "method": HTTPClient.METHOD_PUT, "body": "{}"}
-	var eq: DotResult = await b.set_equipped("comet", "arena")
+	var eq: DotResult = await b.set_equipped("comet", "fc")
 	_check(eq.ok and eq.value["equipped"] == "comet", "set_equipped succeeds")
 	var put: Dictionary = m.calls[1]
-	_check(put["method"] == HTTPClient.METHOD_PUT and JSON.parse_string(put["body"]) == {"id": "comet", "game": "arena"}, "PUT carries id and game")
+	_check(put["method"] == HTTPClient.METHOD_PUT and JSON.parse_string(put["body"]) == {"id": "comet", "game": "fc"}, "PUT carries id and game")
 	var site: DotResult = await b.set_equipped("")
 	_check(site.ok and JSON.parse_string(m.calls[2]["body"]) == {"id": ""}, "taking off sends an empty id and no game")
 	var g: DotResult = await _backend(m, "", "").set_equipped("comet")
