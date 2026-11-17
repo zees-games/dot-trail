@@ -25,3 +25,15 @@ Thumbs.db
 /addons/dot_menu
 /addons/dot_ui
 /addons/dot_settings
+/addons/dot_auth
+/addons/dot_combat
+/addons/dot_fx
+/addons/dot_map
+/addons/dot_moderation
+/addons/dot_player
+/addons/dot_player_class
+/addons/dot_spectate
+/addons/dot_sql
+/addons/dot_team
+/addons/dot_user
+/addons/dot_voice
