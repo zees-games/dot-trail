@@ -1,6 +1,50 @@
 {
-    "schema": 1,
-    "title": "GS - Trails",
-    "kinds": ["addon"],
-    "games": ["gamemann/game-playlot"]
+  "schema": 1,
+  "title": "GS - Trails",
+  "kinds": [
+    "trail"
+  ],
+  "games": [
+    "gamemann/game-playlot"
+  ],
+  "entries": [
+    {
+      "kind": "trail",
+      "id": "ember",
+      "name": "Ember",
+      "category": "trails",
+      "thumbnail": "ember.png",
+      "def": "trails.json"
+    },
+    {
+      "kind": "trail",
+      "id": "frost",
+      "name": "Frost",
+      "category": "trails",
+      "thumbnail": "frost.png",
+      "def": "trails.json"
+    },
+    {
+      "kind": "trail",
+      "id": "toxic",
+      "name": "Toxic",
+      "category": "trails",
+      "thumbnail": "toxic.png",
+      "def": "trails.json"
+    },
+    {
+      "kind": "trail",
+      "id": "violet",
+      "name": "Violet",
+      "category": "trails",
+      "thumbnail": "violet.png",
+      "def": "trails.json"
+    }
+  ],
+  "categories": [
+    {
+      "id": "trails",
+      "name": "Trails"
+    }
+  ]
 }

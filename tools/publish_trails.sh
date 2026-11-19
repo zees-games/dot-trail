@@ -1,6 +1,7 @@
 #!/bin/bash
 # Publishes the data-only "GS - Trails" pack (content/gs-trails: images, trails.json, provides.json, licence.json) to the dot-cloud CDN.
-# No addon code ships: dot_trail is the host's. Load trails.json with DotTrailRegistry.load_index, by path.
+# Kind "trail": one provides entry per trail (def = trails.json), so a game that accepts "trail" mounts it as data. No addon code ships: dot_trail is the host's.
+# A consumer loads the mounted dir with DotTrailStore.load_dir (images read from bytes, never as resources).
 #   tools/publish_trails.sh VERSION [extra publish_pack.sh flags, e.g. --asset ID --site URL --token-file F --dry-run]
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
