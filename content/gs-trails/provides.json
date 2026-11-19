@@ -1,0 +1,6 @@
+{
+    "schema": 1,
+    "title": "GS - Trails",
+    "kinds": ["addon"],
+    "games": ["gamemann/game-playlot"]
+}
