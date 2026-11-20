@@ -1,3 +1,5 @@
+[![dot-trail - GameSpice addon](docs/banner.png)](https://github.com/gamespice-platform/dot-trail)
+
 Players equip a trail, an image ribbon that follows them as they move. Operators upload trails and choose who may wear them: everyone, or only some groups (donators, say). The server decides what a player may wear, and clients download every trail as one pack before joining. Design notes: [docs/design.md](docs/design.md).
 
 **Licensing: this addon provides upload and display only. It ships no art; whoever uploads an image is responsible for having the right to distribute it.**
