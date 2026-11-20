@@ -41,7 +41,7 @@ emitter.set_trail(trails.get_def(equip.worn(peer_id)))
 | `max_lifetime` | 5.0 | Longest ribbon lifetime a trail may ask for, in seconds. Any value; 0 is unlimited. |
 | `cull_distance` | 60 | Distance beyond which a ribbon is not drawn. 0 is never culled. |
 
-These are limits you can change, and like other Gamespice settings 0 means unlimited. A negative value is refused when the config is validated, never clamped.
+These are limits you can change, and like other GameSpice settings 0 means unlimited. A negative value is refused when the config is validated, never clamped.
 
 ## Testing
 
@@ -58,6 +58,6 @@ Import the project once, then run `trail_selftest.tscn`, `ui_selftest.tscn` and 
 
 ## Status and licence
 
-Part of the [Gamespice](https://gamespice.net) platform of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/zees-games/dot-trail/issues) when you hit one.
+Part of the [**GameSpice**](https://gamespice.net) platform of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/zees-games/dot-trail/issues) when you hit one.
 
-MIT licence, see [LICENSE](LICENSE). The only closed part of the [Gamespice](https://gamespice.net) platform is the web back end; you can use your own instead of Gamespice's.
+MIT licence, see [LICENSE](LICENSE). The only closed part of the [**GameSpice**](https://gamespice.net) platform is the web back end; you can use your own instead of GameSpice's.
